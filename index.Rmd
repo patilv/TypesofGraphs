@@ -1,0 +1,301 @@
+---
+title: "Few Types of Graphs"
+author:  "Vivek H. Patil <br> Professor of Marketing, Gonzaga University"
+date: "October 17, 2017"
+output:
+  ioslides_presentation:
+    smaller: yes
+    theme: spacelab
+    widescreen: yes
+---
+
+
+<style>
+.title-slide hgroup h1 {color: red;}
+h2 {color: red;}
+slides > slide:not(.nobackground):after {
+  content: '';
+  
+}
+</style>
+
+
+```{r global_options, echo=FALSE, include=FALSE}
+library(knitr)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(reshape2)
+library(dplyr)
+library(choroplethr)
+library(plotrix)
+opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=9, fig.height=5)# width=14
+```
+
+## Anscombe's Quartet
+
+
+```{r results='asis', message=FALSE, echo=FALSE}
+anscombe=as.data.frame(anscombe)
+anscombereorder=anscombe[,c(1,5,2,6,3,7,4,8)]
+kable(anscombereorder, format="html",table.attr='cellpadding="7"',row.names=TRUE)
+
+```
+
+## Beauty of Quartet
+
+```{r results='asis'}
+anscombelong=data.frame(x=unlist(anscombe[,1:4]),
+                               y=unlist(anscombe[,5:8]),
+                               datasource=rep(1:4,each=11))
+kable(anscombelong %>%
+  group_by(datasource) %>%
+  summarise("x-mean"=mean(x),"y-mean"=mean(y),"x-variance"=var(x),"y-variance"=var(y), "correlation-xy"= cor(x,y)),table.attr='cellpadding="3"', format="html",row.names=FALSE)
+
+```
+
+## Plots of the datasets
+
+```{r}
+# http://stackoverflow.com/questions/7549694/ggplot2-adding-regression-line-equation-and-r2-on-graph 
+lm_eqn = function(m) {
+  l <- list(a = format(coef(m)[1], digits = 2),
+      b = format(abs(coef(m)[2]), digits = 2),
+      r2 = format(summary(m)$r.squared, digits = 3));
+
+  if (coef(m)[2] >= 0)  {
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
+  } else {
+    eq <- substitute(italic(y) == a - b %.% italic(x)*","~~italic(r)^2~"="~r2,l)    
+  }
+
+  as.character(as.expression(eq));                 
+}
+
+ggplot(anscombelong,aes(x=x,y=y))+geom_point()+geom_smooth(method="lm",se=FALSE)+annotate("text", x = 12, y = 4, label = lm_eqn(lm(y ~ x, anscombelong)), color="black",  parse = TRUE)+ylim(3,13)+xlim(4,19)+facet_wrap(~datasource)+theme(legend.position="none")+theme_bw()
+
+
+```
+
+
+## Encoding Categorical Variables
+ 
+ * 2D position
+ * Hue
+ * Point Shape
+ * Fill pattern
+ * Line Style
+
+
+## Relationships usually displayed in graphs
+
+* Time Series: Changes in variable(s) over time (Change, rise, increase, fluctuate, grow, decline, decrease, trend)
+* Ranking (larger/smaller/equal to/greater/lesser)
+* Part-to-whole (rate/percent/share of total/accounts for n percent)
+* Deviation (absolute/percentage/rate of deviations from a reference value,)
+* Distribution (frequency, distribution, range, concentration, normal)
+* Correlation (how variables covary - increases/decreases/changes with, caused by, affected by)
+* Geospatial (spatial, geographical - county/city/region/state/...)
+* Nominal comparison (simple comparison of categorical variables - alphabetical/ascending/descending)
+
+
+## Nominal Comparisons
+```{r echo=FALSE}
+Region=c("North","South","East","West")
+Customers=c(10000,5000,25000,15000)
+nom=data.frame(Region,Customers)
+nom$Region = factor(nom$Region,levels(nom$Region)[c(2,3,1,4)])
+vert=ggplot(nom,aes(Region,Customers))+geom_bar(stat="identity")
+horiz=ggplot(nom,aes(Region,Customers))+geom_bar(stat="identity")+coord_flip()
+dotplots=ggplot(nom,aes(Region,Customers))+geom_point()
+grid.arrange(vert,horiz,dotplots,ncol=2)
+#write.csv(nom,file="slide5.csv")
+#* Vertical/Horizontal bars and points
+```
+
+## Time Series
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+
+Month=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+set.seed(123)
+Sales=round(rnorm(12,50000,1000),2)
+df=data.frame(Month,Sales)
+df$Month=factor(df$Month,levels(df$Month)[c(5,4,8,1,9,7,6,2,12,11,10,3)])
+
+vert=ggplot(df,aes(Month,Sales))+geom_bar(stat="identity")
+pointonly=ggplot(df,aes(Month,Sales))+geom_point()
+linepoint=ggplot(df,aes(Month,Sales))+geom_point()+geom_line(aes(group=""))
+lineonly=ggplot(df,aes(Month,Sales))+geom_line(aes(group=""))
+df[c(1,2,4,6,8),]$Sales=NA
+partialonly=  ggplot(df,aes(Month,Sales))+geom_point()
+
+dfagain = data.frame(matrix(vector(), 3000, 12))
+colnames(dfagain)= c("Jan","Feb","March","April","May","June","July","Aug","Sep","Oct","Nov","Dec")
+for (i in 1:12){dfagain[,i]=round(rnorm(3000,40000,2000),2)}
+dfagainmelt=melt(dfagain)
+colnames(dfagainmelt)=c("Month","Sales")
+boxonly=ggplot(dfagainmelt,aes(Month,Sales))+geom_boxplot()
+grid.arrange(vert,pointonly,linepoint,lineonly,partialonly,boxonly,ncol=2)
+
+# * Vertical bars when individual values are to be emphasized,rather than the pattern
+# * Lines(with/without points) for patterns
+# * Points only when irregular time intervals
+# * Box plots for distributions over time
+
+```
+
+## Ranking
+
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+State=c("Washington","California","Kansas","Colorado","New Jersey","New York","Idaho")
+set.seed(123)
+Sales=round(rnorm(7,50000,10000),2)
+dfranking=data.frame(State,Sales)
+alpha=  ggplot(dfranking,aes(State,Sales))+geom_bar(stat="identity")
+asc=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_bar(stat="identity")+xlab("State")
+vert=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_bar(stat="identity")+xlab("State")+coord_flip()
+dotp=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_point()+xlab("State")+coord_flip()
+grid.arrange(alpha,asc,vert,dotp,ncol=2)
+```
+
+## Part-to-Whole
+
+```{r echo=FALSE}
+absovert= 
+  ggplot(nom,aes(factor(""),Customers,fill=Region))+geom_bar(stat="identity")+xlab("Region")
+library(scales)
+percvert= ggplot(nom,aes(factor(""),Customers,fill=Region))+geom_bar(stat="identity",position="fill")+xlab("Region")+scale_y_continuous(labels=percent_format())
+perchoriz= ggplot(nom,aes(factor(""),Customers,fill=Region))+geom_bar(stat="identity",position="fill")+xlab("Region")+scale_y_continuous(labels=percent_format())+coord_flip()
+
+grid.arrange(absovert,percvert,perchoriz,ncol=2)
+```
+
+## Shapes with 2-D areas (area-graphs)
+```{r echo=FALSE}
+# Color function from http://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
+}
+
+Slice=c("A","B","C","D","E")
+Value=c(24,20,19,21,16)
+
+par(mfrow=c(1,2))
+pie(Value,labels=Slice,col=gg_color_hue(length(Slice)))
+pie3D(Value,labels=Slice,explode=0.1,col=gg_color_hue(length(Slice)))
+```
+
+## Shapes with 2-D or Bars?
+
+```{r echo=FALSE}
+dfpiebar=data.frame(Slice,Value)
+barpiebar=ggplot(dfpiebar,aes(Slice,Value))+geom_bar(stat="identity")
+barpiebar
+```
+
+
+## Part-to-Whole
+Pie-charts, for their disadvantages, are easily recognized. Can use bars close to each other.
+```{r echo=FALSE}
+nomperc= nom%>%mutate(Percentage=round((Customers/sum(Customers)),4))
+               
+percaxis=ggplot(nomperc,aes(Region,Percentage))+geom_bar(stat="identity",width=1,color="white")+xlab("Region")+scale_y_continuous(labels=percent_format())+scale_x_discrete(breaks=nomperc$Region, labels=paste(nomperc$Region,paste(nomperc$Percentage*100,"%",sep=""),sep="\n"))+ylab("Sales Percentage")+ggtitle("Four Regions Account for 100% of Sales")
+
+onbar=ggplot(nomperc,aes(reorder(Region,Percentage),Percentage))+geom_bar(stat="identity",width=1,color="white")+xlab("Region")+scale_y_continuous(labels=percent_format())+geom_text(aes(y=Percentage,x=reorder(Region,Percentage),label=paste(Percentage*100,"%",sep="")),vjust=1.5,colour="white")+ggtitle("Four Regions Account for 100% of Sales")
+
+percaxishoriz=ggplot(nomperc,aes(Region,Percentage))+geom_bar(stat="identity",width=1,color="white")+xlab("Region")+scale_y_continuous(labels=percent_format())+scale_x_discrete(breaks=nomperc$Region, labels=paste(nomperc$Region,paste(nomperc$Percentage*100,"%",sep=""),sep=":"))+ylab("Sales Percentage")+ggtitle("Four Regions Account for 100% of Sales")+coord_flip()
+
+horizonbar=ggplot(nomperc,aes(reorder(Region,Percentage),Percentage))+geom_bar(stat="identity",width=1,color="white")+xlab("Region")+scale_y_continuous(labels=percent_format())+geom_text(aes(y=Percentage,x=reorder(Region,Percentage),label=paste(Percentage*100,"%",sep="")),hjust=1.5,colour="white")+ggtitle("Four Regions Account for 100% of Sales")+coord_flip()
+grid.arrange(percaxis,percaxishoriz,onbar,horizonbar,ncol=2)
+```
+
+
+## Deviation Designs
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+tea=c("Arabian","French Roast")
+Sales=c(10000, 15000)
+Plan=c(12000,12000)
+Variance=c(-2000,3000)
+df=data.frame(tea,Sales,Plan,Variance)
+dfmelt=melt(df,id=c("tea","Variance"))
+salesplanbar= ggplot(dfmelt,aes(tea,value,fill=variable))+geom_bar(stat="identity",position="dodge")
+salesplan=ggplot(df,aes(x=tea,y=Sales,fill=tea))+geom_bar(stat="identity")+geom_segment(aes(x=as.numeric(df$tea)-.475,xend=as.numeric(df$tea)+.475,y=df$Plan,yend=df$Plan))+ggtitle("Sales (bars) vs Plan (lines)")+theme(legend.position="None")
+varianceplan=ggplot(df,aes(x=tea,y=Variance,fill=tea))+geom_bar(stat="identity")+ggtitle("Variance from Planned")+ theme(legend.position="None")
+
+Month=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+set.seed(123)
+Change=round(rnorm(12,0,15),2)
+dft=data.frame(Month,Change)
+dft$Month=factor(dft$Month,levels(dft$Month)[c(5,4,8,1,9,7,6,2,12,11,10,3)])
+tseriesvariance=ggplot(dft,aes(Month,Change))+geom_line(aes(group=""))+geom_segment(aes(y=0,yend=0,x=0,xend=Month),color="gray")+ggtitle("Percentage change in sales from month to month")
+
+grid.arrange(salesplanbar,salesplan,varianceplan,tseriesvariance,ncol=2)
+```
+
+
+## Studying Distributions
+
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+stripplot=ggplot(mtcars,aes(mpg))+geom_dotplot(binwidth=.3)+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())+ylab("") +ggtitle("Dot/Strip plot")
+pointplot=ggplot(mtcars,aes(mpg,""))+geom_point()+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())+ylab("")+ggtitle("Dot/Strip plot")
+nodays=1:10
+salesperc=c(2,10,10,20,40,8,5,3,1,1)
+percsalesdf=data.frame(nodays,salesperc)
+freqpoly=ggplot(percsalesdf,aes(nodays,salesperc))+geom_line()+scale_x_continuous(breaks=1:10)+xlab("Number of days")+ylab("Percent of sales")+ggtitle("Frequency polygon")
+percsalesdf$cumsum=cumsum(percsalesdf$salesperc)
+cumfreqpoly=ggplot(percsalesdf,aes(nodays,cumsum))+geom_line()+scale_x_continuous(breaks=1:10)+xlab("Number of days")+ylab("Cumulative percentage of sales")+ggtitle("Frequency polygon: Cumulative percentage of sales")
+grid.arrange(stripplot,pointplot,freqpoly,cumfreqpoly)
+```
+
+
+## More distributions
+
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+bars=ggplot(diamonds,aes(cut))+geom_bar()+ggtitle("Bar plot")+xlab("")
+hist=ggplot(diamonds,aes(price))+geom_histogram()+ggtitle("Histogram")
+boxdiamond=ggplot(diamonds,aes(cut,price))+geom_boxplot()+xlab("")+ggtitle("Box plots")
+densitydiamond=ggplot(diamonds,aes(price,color=cut))+geom_density()+ggtitle("Kernel density plots")
+
+grid.arrange(bars,hist,boxdiamond,densitydiamond,ncol=2)
+```
+
+
+## Correlations
+
+```{r echo=FALSE}
+empty1 =  ggplot()+geom_point(aes(1,1), colour="white")+geom_blank()+theme_tufte(ticks=F)+xlab(" ")+ylab(" ")+theme(axis.text = element_blank())+theme(plot.margin=unit(c(0,0,0,0),"mm"))
+scatter=ggplot(mtcars,aes(mpg,qsec))+geom_point()+xlab("Miles per gallon") + ylab("Quarter mile time (in sec)")
+mpgbar=ggplot(mtcars,aes(y=mpg,x=reorder(1:nrow(mtcars),mpg)))+geom_bar(stat="identity")+xlab("")+ylab("Miles per gallon")+theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+coord_flip()
+qsecbar=ggplot(mtcars,aes(y=qsec,x=reorder(1:nrow(mtcars),mpg)))+geom_bar(stat="identity")+xlab("")+ylab("Quarter mile time (in sec)")+theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+coord_flip()
+grid.arrange(scatter,empty1,mpgbar,qsecbar,ncol=2)
+```
+
+
+## Geo-Spatial Designs
+
+<img src="playernationalitymap.png" width=800 height=640>
+
+
+## Violent Crime Rates Across 5 Decades
+
+<iframe src="http://patilv.github.io/choroplethanimation/decadeplots.html" width=800 height=600> </iframe>
+
+
+
+## Gonzaga MAPS Project
+
+* Details at [http://www.gonzaga.edu/student-life/MAPS/MAPS-Visualization.asp](http://www.gonzaga.edu/student-life/MAPS/MAPS-Visualization.asp) 
+* Visualization at [https://analytics.gonzaga.edu/MAPSProject-combo/](https://analytics.gonzaga.edu/MAPSProject-combo/)
+
+
+
+
+## Acknowledgements
+
+
+* Most of the content derived from chapter titled "Fundamental Variations of Graphs" in Stephen Few's book: "Show Me the Numbers" 
+* Almost all graphs created using the `ggplot2` package in R
+* Code and datasets for this presentation can be found at: https://github.com/patilv/TypesofGraphs
+* The presentation can be found at: http://patilv.com/TypesofGraphs
+
