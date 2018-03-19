@@ -285,7 +285,7 @@ grid.arrange(scatter,empty1,mpgbar,qsecbar,ncol=2)
 
 ## Gonzaga MAPS Project
 
-* Details at [http://www.gonzaga.edu/student-life/MAPS/MAPS-Visualization.asp](http://www.gonzaga.edu/student-life/MAPS/MAPS-Visualization.asp) 
+* Details at [https://www.gonzaga.edu/student-life/community-engagement-and-service/community-engaged-learning/neighborhood-maps-project/maps-visualization](https://www.gonzaga.edu/student-life/community-engagement-and-service/community-engaged-learning/neighborhood-maps-project/maps-visualization) 
 * Visualization at [https://analytics.gonzaga.edu/MAPSProject-combo/](https://analytics.gonzaga.edu/MAPSProject-combo/)
 
 
