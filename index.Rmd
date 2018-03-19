@@ -1,7 +1,7 @@
 ---
 title: "Few Types of Graphs"
 author:  "Vivek H. Patil <br> Professor of Marketing, Gonzaga University"
-date: "October 17, 2017"
+date: ""
 output:
   ioslides_presentation:
     smaller: yes
