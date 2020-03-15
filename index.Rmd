@@ -9,54 +9,61 @@ output:
     widescreen: yes
 ---
 
-
 <style>
 .title-slide hgroup h1 {color: red;}
 h2 {color: red;}
 slides > slide:not(.nobackground):after {
   content: '';
-  
+}
+
+img.animated-gif{
+  width: 800px;
+  height: auto;
 }
 </style>
 
 
-```{r global_options, echo=FALSE, include=FALSE}
-library(knitr)
+
+```{r global_options, include=FALSE}
 library(ggplot2)
+library(dplyr)
+library(knitr)
+library(datasauRus)
 library(gridExtra)
 library(ggthemes)
 library(reshape2)
-library(dplyr)
 library(choroplethr)
 library(plotrix)
+
 opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=9, fig.height=5)# width=14
 ```
 
-## Anscombe's Quartet
 
+## 4 Datasets
 
-```{r results='asis', message=FALSE, echo=FALSE}
-anscombe=as.data.frame(anscombe)
-anscombereorder=anscombe[,c(1,5,2,6,3,7,4,8)]
-kable(anscombereorder, format="html",table.attr='cellpadding="7"',row.names=TRUE)
+```{r echo=FALSE, results='asis'}
 
+anscombe <- as.data.frame(anscombe)
+anscombereorder <- anscombe[, c(1, 5, 2, 6, 3, 7, 4, 8)]
+kable(anscombereorder)
 ```
 
-## Beauty of Quartet
+## 4 Datasets - Statistics
 
-```{r results='asis'}
-anscombelong=data.frame(x=unlist(anscombe[,1:4]),
-                               y=unlist(anscombe[,5:8]),
-                               datasource=rep(1:4,each=11))
-kable(anscombelong %>%
-  group_by(datasource) %>%
-  summarise("x-mean"=mean(x),"y-mean"=mean(y),"x-variance"=var(x),"y-variance"=var(y), "correlation-xy"= cor(x,y)),table.attr='cellpadding="3"', format="html",row.names=FALSE)
-
+```{r results='asis',echo=FALSE}
+anscombelong <- data.frame(x = unlist(anscombe[, 1:4]), y = unlist(anscombe[, 
+    5:8]), datasource = rep(1:4, each = 11))
+stats=anscombelong %>% group_by(datasource) %>% summarise("x-mean" = mean(x), 
+    "y-mean" = mean(y), "x-variance" = var(x), "y-variance" = var(y), "correlation-xy" = cor(x, 
+        y))
+kable(stats)
 ```
 
-## Plots of the datasets
 
-```{r}
+
+## Anscombe's Quartet - Graphs
+
+```{r echo=FALSE}
 # http://stackoverflow.com/questions/7549694/ggplot2-adding-regression-line-equation-and-r2-on-graph 
 lm_eqn = function(m) {
   l <- list(a = format(coef(m)[1], digits = 2),
@@ -71,20 +78,28 @@ lm_eqn = function(m) {
 
   as.character(as.expression(eq));                 
 }
-
-ggplot(anscombelong,aes(x=x,y=y))+geom_point()+geom_smooth(method="lm",se=FALSE)+annotate("text", x = 12, y = 4, label = lm_eqn(lm(y ~ x, anscombelong)), color="black",  parse = TRUE)+ylim(3,13)+xlim(4,19)+facet_wrap(~datasource)+theme(legend.position="none")+theme_bw()
-
-
+ggplot(anscombelong, aes(x = x, y = y)) + geom_point() + geom_smooth(method = "lm", 
+    se = FALSE) + annotate("text", x = 12, y = 4, label = lm_eqn(lm(y ~ 
+    x, anscombelong)), color = "black", parse = TRUE) + ylim(3, 13) + xlim(4, 
+    19) + facet_wrap(~datasource) + theme(legend.position = "none") + theme_bw()
 ```
 
+## The Datasaurus Dozen: What's common?
 
-## Encoding Categorical Variables
- 
- * 2D position
- * Hue
- * Point Shape
- * Fill pattern
- * Line Style
+```{r fig.width = 9, fig.height = 5}
+
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
+  geom_point()+
+  theme_void()+
+  theme(legend.position = "none")+
+  facet_wrap(~dataset, ncol=3) + labs(caption="Cairo (2016)") + 
+  theme(plot.caption = element_text(hjust=0.5, size=rel(1.2)))
+```
+
+## The Datasaurus Dozen - Revelation
+
+<img class="animated-gif" src= "DinoSequential.gif" alt= "Datasaurus" title="DataSaurus" >
+
 
 
 ## Relationships usually displayed in graphs
@@ -96,7 +111,6 @@ ggplot(anscombelong,aes(x=x,y=y))+geom_point()+geom_smooth(method="lm",se=FALSE)
 * Distribution (frequency, distribution, range, concentration, normal)
 * Correlation (how variables covary - increases/decreases/changes with, caused by, affected by)
 * Geospatial (spatial, geographical - county/city/region/state/...)
-* Nominal comparison (simple comparison of categorical variables - alphabetical/ascending/descending)
 
 
 ## Nominal Comparisons
@@ -234,41 +248,31 @@ grid.arrange(salesplanbar,salesplan,varianceplan,tseriesvariance,ncol=2)
 ```
 
 
-## Studying Distributions
 
-```{r echo=FALSE, warning=FALSE,message=FALSE}
-stripplot=ggplot(mtcars,aes(mpg))+geom_dotplot(binwidth=.3)+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())+ylab("") +ggtitle("Dot/Strip plot")
-pointplot=ggplot(mtcars,aes(mpg,""))+geom_point()+theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())+ylab("")+ggtitle("Dot/Strip plot")
-nodays=1:10
-salesperc=c(2,10,10,20,40,8,5,3,1,1)
-percsalesdf=data.frame(nodays,salesperc)
-freqpoly=ggplot(percsalesdf,aes(nodays,salesperc))+geom_line()+scale_x_continuous(breaks=1:10)+xlab("Number of days")+ylab("Percent of sales")+ggtitle("Frequency polygon")
-percsalesdf$cumsum=cumsum(percsalesdf$salesperc)
-cumfreqpoly=ggplot(percsalesdf,aes(nodays,cumsum))+geom_line()+scale_x_continuous(breaks=1:10)+xlab("Number of days")+ylab("Cumulative percentage of sales")+ggtitle("Frequency polygon: Cumulative percentage of sales")
-grid.arrange(stripplot,pointplot,freqpoly,cumfreqpoly)
-```
-
-
-## More distributions
+## Distributions
 
 ```{r echo=FALSE, warning=FALSE,message=FALSE}
 bars=ggplot(diamonds,aes(cut))+geom_bar()+ggtitle("Bar plot")+xlab("")
-hist=ggplot(diamonds,aes(price))+geom_histogram()+ggtitle("Histogram")
+hist=ggplot(diamonds,aes(price))+geom_histogram(color="white")+ggtitle("Histogram")
 boxdiamond=ggplot(diamonds,aes(cut,price))+geom_boxplot()+xlab("")+ggtitle("Box plots")
-densitydiamond=ggplot(diamonds,aes(price,color=cut))+geom_density()+ggtitle("Kernel density plots")
+densitydiamond=ggplot(diamonds,aes(price))+geom_density()+ggtitle("Kernel density plots")
 
 grid.arrange(bars,hist,boxdiamond,densitydiamond,ncol=2)
 ```
 
+## Density plot
+
+```{r}
+ggplot(diamonds,aes(price,fill=cut))+geom_density(alpha=.3)+ggtitle("Kernel density plots")
+
+```
 
 ## Correlations
 
 ```{r echo=FALSE}
-empty1 =  ggplot()+geom_point(aes(1,1), colour="white")+geom_blank()+theme_tufte(ticks=F)+xlab(" ")+ylab(" ")+theme(axis.text = element_blank())+theme(plot.margin=unit(c(0,0,0,0),"mm"))
-scatter=ggplot(mtcars,aes(mpg,qsec))+geom_point()+xlab("Miles per gallon") + ylab("Quarter mile time (in sec)")
-mpgbar=ggplot(mtcars,aes(y=mpg,x=reorder(1:nrow(mtcars),mpg)))+geom_bar(stat="identity")+xlab("")+ylab("Miles per gallon")+theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+coord_flip()
-qsecbar=ggplot(mtcars,aes(y=qsec,x=reorder(1:nrow(mtcars),mpg)))+geom_bar(stat="identity")+xlab("")+ylab("Quarter mile time (in sec)")+theme(axis.ticks.y=element_blank(),axis.text.y=element_blank())+coord_flip()
-grid.arrange(scatter,empty1,mpgbar,qsecbar,ncol=2)
+
+scatter=ggplot(mtcars,aes(mpg,qsec))+geom_point()+xlab("Miles per gallon") + ylab("Quarter mile time (in sec)")+geom_smooth(method="lm",se=FALSE)
+scatter
 ```
 
 
