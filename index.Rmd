@@ -38,6 +38,7 @@ library(plotrix)
 opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=9, fig.height=5)# width=14
 ```
 
+## Why create graphs?
 
 ## 4 Datasets
 
