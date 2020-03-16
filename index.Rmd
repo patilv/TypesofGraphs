@@ -122,41 +122,9 @@ nom=data.frame(Region,Customers)
 nom$Region = factor(nom$Region,levels(nom$Region)[c(2,3,1,4)])
 vert=ggplot(nom,aes(Region,Customers))+geom_bar(stat="identity")
 horiz=ggplot(nom,aes(Region,Customers))+geom_bar(stat="identity")+coord_flip()
-dotplots=ggplot(nom,aes(Region,Customers))+geom_point()
-grid.arrange(vert,horiz,dotplots,ncol=2)
+grid.arrange(vert,horiz,ncol=2)
 #write.csv(nom,file="slide5.csv")
 #* Vertical/Horizontal bars and points
-```
-
-## Time Series
-```{r echo=FALSE, warning=FALSE,message=FALSE}
-
-Month=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
-set.seed(123)
-Sales=round(rnorm(12,50000,1000),2)
-df=data.frame(Month,Sales)
-df$Month=factor(df$Month,levels(df$Month)[c(5,4,8,1,9,7,6,2,12,11,10,3)])
-
-vert=ggplot(df,aes(Month,Sales))+geom_bar(stat="identity")
-pointonly=ggplot(df,aes(Month,Sales))+geom_point()
-linepoint=ggplot(df,aes(Month,Sales))+geom_point()+geom_line(aes(group=""))
-lineonly=ggplot(df,aes(Month,Sales))+geom_line(aes(group=""))
-df[c(1,2,4,6,8),]$Sales=NA
-partialonly=  ggplot(df,aes(Month,Sales))+geom_point()
-
-dfagain = data.frame(matrix(vector(), 3000, 12))
-colnames(dfagain)= c("Jan","Feb","March","April","May","June","July","Aug","Sep","Oct","Nov","Dec")
-for (i in 1:12){dfagain[,i]=round(rnorm(3000,40000,2000),2)}
-dfagainmelt=melt(dfagain)
-colnames(dfagainmelt)=c("Month","Sales")
-boxonly=ggplot(dfagainmelt,aes(Month,Sales))+geom_boxplot()
-grid.arrange(vert,pointonly,linepoint,lineonly,partialonly,boxonly,ncol=2)
-
-# * Vertical bars when individual values are to be emphasized,rather than the pattern
-# * Lines(with/without points) for patterns
-# * Points only when irregular time intervals
-# * Box plots for distributions over time
-
 ```
 
 ## Ranking
@@ -171,6 +139,25 @@ asc=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_bar(stat="identity")+
 vert=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_bar(stat="identity")+xlab("State")+coord_flip()
 dotp=ggplot(dfranking,aes(reorder(State,Sales),Sales))+geom_point()+xlab("State")+coord_flip()
 grid.arrange(alpha,asc,vert,dotp,ncol=2)
+```
+
+
+## Distributions
+
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+bars=ggplot(diamonds,aes(cut))+geom_bar()+ggtitle("Bar plot")+xlab("")
+hist=ggplot(diamonds,aes(price))+geom_histogram(color="white")+ggtitle("Histogram")
+boxdiamond=ggplot(diamonds,aes(cut,price))+geom_boxplot()+xlab("")+ggtitle("Box plots")
+densitydiamond=ggplot(diamonds,aes(price))+geom_density()+ggtitle("Kernel density plots")
+
+grid.arrange(bars,hist,boxdiamond,densitydiamond,ncol=2)
+```
+
+## Density plot
+
+```{r}
+ggplot(diamonds,aes(price,fill=cut))+geom_density(alpha=.3)+ggtitle("Kernel density plots")
+
 ```
 
 ## Part-to-Whole
@@ -226,6 +213,38 @@ grid.arrange(percaxis,percaxishoriz,onbar,horizonbar,ncol=2)
 ```
 
 
+## Time Series
+```{r echo=FALSE, warning=FALSE,message=FALSE}
+
+Month=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+set.seed(123)
+Sales=round(rnorm(12,50000,1000),2)
+df=data.frame(Month,Sales)
+df$Month=factor(df$Month,levels(df$Month)[c(5,4,8,1,9,7,6,2,12,11,10,3)])
+
+vert=ggplot(df,aes(Month,Sales))+geom_bar(stat="identity")
+pointonly=ggplot(df,aes(Month,Sales))+geom_point()
+linepoint=ggplot(df,aes(Month,Sales))+geom_point()+geom_line(aes(group=""))
+lineonly=ggplot(df,aes(Month,Sales))+geom_line(aes(group=""))
+df[c(1,2,4,6,8),]$Sales=NA
+partialonly=  ggplot(df,aes(Month,Sales))+geom_point()
+
+dfagain = data.frame(matrix(vector(), 3000, 12))
+colnames(dfagain)= c("Jan","Feb","March","April","May","June","July","Aug","Sep","Oct","Nov","Dec")
+for (i in 1:12){dfagain[,i]=round(rnorm(3000,40000,2000),2)}
+dfagainmelt=melt(dfagain)
+colnames(dfagainmelt)=c("Month","Sales")
+boxonly=ggplot(dfagainmelt,aes(Month,Sales))+geom_boxplot()
+grid.arrange(vert,pointonly,linepoint,lineonly,partialonly,boxonly,ncol=2)
+
+# * Vertical bars when individual values are to be emphasized,rather than the pattern
+# * Lines(with/without points) for patterns
+# * Points only when irregular time intervals
+# * Box plots for distributions over time
+
+```
+
+
 ## Deviation Designs
 ```{r echo=FALSE, warning=FALSE,message=FALSE}
 tea=c("Arabian","French Roast")
@@ -249,24 +268,6 @@ grid.arrange(salesplanbar,salesplan,varianceplan,tseriesvariance,ncol=2)
 ```
 
 
-
-## Distributions
-
-```{r echo=FALSE, warning=FALSE,message=FALSE}
-bars=ggplot(diamonds,aes(cut))+geom_bar()+ggtitle("Bar plot")+xlab("")
-hist=ggplot(diamonds,aes(price))+geom_histogram(color="white")+ggtitle("Histogram")
-boxdiamond=ggplot(diamonds,aes(cut,price))+geom_boxplot()+xlab("")+ggtitle("Box plots")
-densitydiamond=ggplot(diamonds,aes(price))+geom_density()+ggtitle("Kernel density plots")
-
-grid.arrange(bars,hist,boxdiamond,densitydiamond,ncol=2)
-```
-
-## Density plot
-
-```{r}
-ggplot(diamonds,aes(price,fill=cut))+geom_density(alpha=.3)+ggtitle("Kernel density plots")
-
-```
 
 ## Correlations
 
